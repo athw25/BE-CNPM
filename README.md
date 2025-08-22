@@ -1,4 +1,6 @@
+# Project IMS
 
+```bash
 ├─ README.md
 ├─ .env                               # MYSQL_URL=mysql+pymysql://root:1234@127.0.0.1:3306/ims?charset=utf8mb4
 ├─ .venv/                             # virtual env (local)
@@ -89,3 +91,4 @@
    ├─ error_handler.py                # bắt và trả JSON lỗi chuẩn cho toàn app
    ├─ logging.py                      # cấu hình logging
    └─ cors.py                         # bật CORS nếu cần
+```
