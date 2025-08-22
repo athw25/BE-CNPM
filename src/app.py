@@ -1,46 +1,80 @@
 # src/app.py
 import os
-from flask import Flask
-from dotenv import load_dotenv
+from flask import jsonify, redirect, url_for
 
-# Logging & Error handler
-from app_logging import init_logging
-from error_handler import register_error_handlers
+# App factory & config
+from src.create_app import create_app
+from src.config import settings
 
-# Controllers (Blueprints)
-from src.api.controllers.user_controller import users_bp
-from src.api.controllers.intern_controller import interns_bp
-from src.api.controllers.recruitment_controller import bp as recruitment_bp
-from src.api.controllers.application_controller import bp as application_bp
-from src.api.controllers.training_controller import training_bp
-from src.api.controllers.project_controller import project_bp
-from src.api.controllers.assignment_controller import assignment_bp
-from src.api.controllers.evaluation_controller import evaluations_bp
+# DB base (CHỈ dùng cho POC khi chưa có Alembic)
+from src.infrastructure.databases import Base, engine
 
 
-def create_app():
-    load_dotenv()  # đọc biến môi trường từ .env
-    app = Flask(__name__)
+def init_db_if_needed():
+    """
+    Tạo schema tự động cho môi trường demo/POC khi:
+    - INIT_DB=1 (mặc định 1)
+    - Có URL kết nối MySQL hợp lệ
+    Dùng Alembic trong môi trường thực tế.
+    """
+    init_db = os.getenv("INIT_DB", "1")
+    if init_db == "1":
+        try:
+            Base.metadata.create_all(bind=engine)
+            print("[INIT_DB] Created tables (POC mode). "
+                  "For production, use Alembic migrations.")
+        except Exception as ex:
+            print(f"[INIT_DB] Failed to create tables: {ex}")
 
-    # 1. Logging
-    init_logging(app)
 
-    # 2. Error handler chung
-    register_error_handlers(app)
+# Tạo app theo app-factory pattern
+app = create_app()
 
-    # 3. Đăng ký các Blueprint
-    app.register_blueprint(users_bp,        url_prefix="/api/users")
-    app.register_blueprint(interns_bp,      url_prefix="/api/interns")
-    app.register_blueprint(recruitment_bp)   # đã có prefix trong controller
-    app.register_blueprint(application_bp)   # đã có prefix trong controller
-    app.register_blueprint(training_bp)      # đã có prefix trong controller
-    app.register_blueprint(project_bp)       # có thể đã prefix "/api/projects"
-    app.register_blueprint(assignment_bp)    # đã có prefix trong controller
-    app.register_blueprint(evaluations_bp, url_prefix="/api/evaluations")
+# Route kiểm tra nhanh
+@app.get("/")
+def root():
+    """
+    Trang chào mừng mô phỏng IMS + link nhanh đến một số tài nguyên.
+    """
+    return jsonify({
+        "app": "IMS – Intern Management System (demo)",
+        "env": settings.ENV,
+        "db": "MySQL via SQLAlchemy",
+        "docs": {
+            "users": "/api/users/",
+            "interns": "/api/interns/",
+            "recruitment": "/api/recruitments/",
+            "applications": "/api/applications/",
+            "trainings": "/api/trainings/",
+            "projects": "/api/projects/",
+            "assignments": "/api/assignments/",
+            "evaluations": "/api/evaluations/"
+        },
+        "health": "/health"
+    })
 
-    return app
+
+@app.get("/health")
+def health():
+    """
+    Healthcheck đơn giản: trả 200 nếu app đang sống.
+    (Có thể mở rộng: ping DB, cache, queue…)
+    """
+    return jsonify({"status": "ok"}), 200
+
+
+def main():
+    # Tạo bảng nếu bật POC mode
+    init_db_if_needed()
+
+    # Đọc HOST/PORT/DEBUG từ env (mặc định cho dev)
+    host = os.getenv("HOST", "0.0.0.0")
+    port = int(os.getenv("PORT", "8000"))
+    debug = os.getenv("DEBUG", "1") == "1"
+
+    # Chạy app
+    app.run(host=host, port=port, debug=debug)
 
 
 if __name__ == "__main__":
-    app = create_app()
-    app.run(debug=True, host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
+    main()

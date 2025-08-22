@@ -5,10 +5,7 @@
 ├─ .env                               # MYSQL_URL=mysql+pymysql://root:1234@127.0.0.1:3306/ims?charset=utf8mb4
 ├─ .venv/                             # virtual env (local)
 └─ src/
-   ├─ __init__.py
-   ├─ create_app.py                   # khởi tạo app + Base.metadata.create_all()
-   ├─ enums.py                        # Role, CampaignStatus, ApplicationStatus, AssignmentStatus, ...
-   │
+   ├─    __init__.py
    ├─ api/
    │  ├─ __init__.py
    │  ├─ controllers/                 # HTTP controllers (Flask Blueprint)
@@ -89,6 +86,11 @@
    │
    ├─ dependency_container.py         # wiring DI: khởi tạo repo/service, inject vào controller
    ├─ error_handler.py                # bắt và trả JSON lỗi chuẩn cho toàn app
-   ├─ logging.py                      # cấu hình logging
-   └─ cors.py                         # bật CORS nếu cần
+   ├─ app_logging.py                  # cấu hình logging
+   ├─ cors.py                         # bật CORS nếu cần
+   ├─ create_app.py                   # khởi tạo app + Base.metadata.create_all()
+   ├─ enums.py                        # Role, CampaignStatus, ApplicationStatus, AssignmentStatus, ...
+   ├─ app.py
+   ├─ config.py
+   ├─ requirements.txt
 ```
